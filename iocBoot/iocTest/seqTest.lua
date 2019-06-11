@@ -12,8 +12,8 @@ test = seq.program "seqtest" {
 	
 	state2=
 	{
-		seq.transition("VAL==0", [[ print("World") ]], "exit"),
-		seq.transition("VAL==1", [[ print("Failure") ]], "exit")
+		seq.transition("VAL==0", 'print("World")', "exit"),
+		seq.transition("VAL==1", 'print("Failure")', "exit")
 	}
 }
 
