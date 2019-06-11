@@ -36,7 +36,7 @@ static int l_runseq(lua_State* state)
 			/*
 			* Each transition is just a table with:
 			*    ["conditional"] -> String, condition to check if true
-			*    ["function"]    -> Function, code to call if the condition evaluates to true
+			*    ["function"]    -> String, code to call if the condition evaluates to true
 			*    ["next_state"]  -> String, Name of the next state to run
 			*
 			* For each transition we'll pull out the conditional...
@@ -64,7 +64,9 @@ static int l_runseq(lua_State* state)
 			if (check)
 			{
 				lua_getfield(state, -1, "function");
-				lua_call(state, 0, 0);
+				const char* to_do = lua_tostring(state, -1);
+				luaL_dostring(state, to_do);
+				lua_pop(state, 1);
 				
 				lua_getfield(state, -1, "next_state");
 				running_state = lua_tostring(state, -1);
