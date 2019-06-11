@@ -4,3 +4,5 @@ iocsh.luaseqTestIOC_registerRecordDeviceDriver(pdbbase)
 ---------------
 iocsh.iocInit()
 ---------------
+
+iocsh.luaSpawn("./seqTest.lua")
