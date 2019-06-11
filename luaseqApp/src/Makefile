@@ -16,8 +16,10 @@ PROD_IOC = luaseqTest
 DBD += luaseqTestIOC.dbd
 luaseqTestIOC_DBD += base.dbd
 luaseqTestIOC_DBD += luaSupport.dbd
+luaseqTestIOC_DBD += luaseq.dbd
 
 luaseqTest_LIBS += lua
+luaseqTest_LIBS += luaseq
 luaseqTest_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 luaseqTest_SRCS += luaseqTestIOC_registerRecordDeviceDriver.cpp

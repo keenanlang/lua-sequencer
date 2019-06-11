@@ -1,6 +1,3 @@
-/* testMain.c */
-/* Author:  Ron Sluiter */
-
 #include <stddef.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -8,16 +5,16 @@
 #include <stdio.h>
 
 #include <epicsThread.h>
-#include <iocsh.h>
 #include <epicsExit.h>
+#include <luaShell.h>
 
-int main(int argc,char *argv[])
+int main(int argc, char *argv[])
 {
     if(argc>=2) {    
-        iocsh(argv[1]);
+        luash(argv[1]);
         epicsThreadSleep(.2);
     }
-    iocsh(NULL);
+    luash(NULL);
 	epicsExit(0);
     return(0);
 }

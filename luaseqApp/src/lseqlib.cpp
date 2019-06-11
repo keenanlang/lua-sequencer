@@ -1,62 +1,85 @@
 #include <stdio.h>
 #include <string>
+#include <string.h>
 #include <sstream>
 #include <epicsExport.h>
 #include "luaEpics.h"
 
 static int l_addstates(lua_State* state)
 {
-	lua_pushnil(state);
-	while (lua_next(state, 2) != 0)
-	{
-		const char* key = lua_tostring(state, -2);
-		lua_pushvalue(state, -1);
-		lua_setfield(state, 1, key);
-		lua_pop(state, 1);
-	}
+	//Put the incoming table into the seq program
+	lua_setfield(state, 1, "states");
+	lua_pushvalue(state, 1);
 
 	return 1;
 }
 
 static int l_runseq(lua_State* state)
-{
-	const char* start = lua_tostring(state, 2);
+{	
+	const char* running_state = lua_tostring(state, 2);
 
-	lua_getfield(state, 1, start);
-	lua_len(state, -1);
-	int length = lua_tointeger(state, -1);
-	lua_pop(state, 2);
-
-	printf("Number of states: %d\n", length);
-
-	/*
-	lua_getfield(state, -1, "conditional");
-
-	std::stringstream conditional;
-
-	conditional << "return (";
-	conditional << lua_tostring(state, -1);
-	conditional << ")";
-
-	lua_pop(state, 1);
-
-	luaL_dostring(state, conditional.str().c_str());
-
-	int check = lua_toboolean(state, -1);
-	lua_pop(state, 1);
-
-	if (check)
+	// seqprog["states"]
+	lua_getfield(state, 1, "states");
+	
+	do
 	{
+		// seqprog["states"]["<start_state>"]
+		lua_getfield(state, -1, running_state);
+		
+		// Iterate over all the transitions
+		lua_len(state, -1);
+		int length = lua_tonumber(state, -1);
+		lua_pop(state, 1);
+		
+		for(int index = 1; index <= length; index += 1)
+		{
+			/*
+			* Each transition is just a table with:
+			*    ["conditional"] -> String, condition to check if true
+			*    ["function"]    -> Function, code to call if the condition evaluates to true
+			*    ["next_state"]  -> String, Name of the next state to run
+			*
+			* For each transition we'll pull out the conditional...
+			*/
+			
+			lua_geti(state, -1, index);
+			lua_getfield(state, -1, "conditional");
+		
+			/*
+			* Turn it into a function by putting it into
+			*   return (<CODE>)
+			*/
+			std::stringstream conditional;
+		
+			conditional << "return (";
+			conditional << lua_tostring(state, -1);
+			conditional << ")";
+		
+			// And evaluate it as a boolean
+			luaL_dostring(state, conditional.str().c_str());
+		
+			int check = lua_toboolean(state, -1);
+			lua_pop(state, 2);
+		
+			if (check)
+			{
+				lua_getfield(state, -1, "function");
+				lua_call(state, 0, 0);
+				
+				lua_getfield(state, -1, "next_state");
+				running_state = lua_tostring(state, -1);
+				lua_pop(state, 2);
+				break;
+			}
+			
+			lua_pop(state, 1);
+		}
+		
+		lua_pop(state, 1);
+	} while(strcmp(running_state, "exit") != 0);
 
-	}
-
-
-
-	lua_getfield(state, -1, "function");
-
-	lua_CFunction tocall = lua_tocfunction(state, -1);
-	*/
-
+	lua_pop(state, 1);
+	
 	return 0;
 }
 
@@ -78,7 +101,8 @@ static int l_seqprogram(lua_State* state)
 	luaL_setfuncs(state, program_meta, 0);
 	lua_pop(state, 1);
 
-	luaL_newlibtable(state, program_funcs);
+	lua_newtable(state);
+	luaL_setfuncs(state, program_funcs, 0);
 
 	lua_pushstring(state, program_name);
 	lua_setfield(state, -2, "program_name");
