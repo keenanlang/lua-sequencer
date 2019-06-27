@@ -1,3 +1,5 @@
+seq = require("seq")
+
 VAL = 1
 
 test = seq.program "seqtest" {
